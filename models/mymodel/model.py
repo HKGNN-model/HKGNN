@@ -11,12 +11,6 @@ from torch_geometric.nn import HypergraphConv
 from torch_scatter import scatter, scatter_add
 from torch_geometric.utils import softmax
 
-model_hyperparam = {
-    'HSimplE': {
-        'hidden_drop': 0.2,
-    }
-}
-
 
 
 class HSimplE(nn.Module):
@@ -25,7 +19,7 @@ class HSimplE(nn.Module):
         self.emb_dim = args.emb_dim
         self.max_arity = 6
 
-        self.hidden_drop_rate = model_hyperparam[args.kg_model]["hidden_drop"]
+        self.hidden_drop_rate = 0.2
 
         self.hidden_drop = torch.nn.Dropout(self.hidden_drop_rate)
 
@@ -160,7 +154,6 @@ class Sequential_model(nn.Module):
 class HKGAT(nn.Module):
     def __init__(self, args, edges, relations):
         super(HKGAT, self).__init__()
-        self.gat_model = args.gat_model
         self.HKG = HSimplE(args)
 
         self.GAT = CEGAT(in_dim=args.emb_dim,
@@ -213,9 +206,9 @@ class HKGAT(nn.Module):
             self.E.requires_grad_(False)
 
             if mode == 'train_gat_check_in':
-                x = self.GAT(torch.cat((self.E.weight, self.E_GNN.weight)), self.edges, training=True)
+                x = self.GAT(self.E.weight, self.edges, training=True)
             else:
-                x = self.GAT(torch.cat((self.E.weight, self.E_GNN.weight)), self.edges, training=False)
+                x = self.GAT(self.E.weight, self.edges, training=False)
 
             check_in_emb = torch.cat((x[index[:, :, 0]], x[index[:, :, 1]], x[index[:, :, 2]], x[index[:, :, 3]],
                                       x[index[:, :, 4]], x[index[:, :, 5]], x[index[:, :, 6]], x[index[:, :, 7]]),

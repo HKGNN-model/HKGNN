@@ -9,7 +9,6 @@ import scipy.sparse as sp
 
 from models.mymodel.model import HKGAT
 from models.baselines.Flashback_model import Flashback,RnnFactory, GraphFlasback, TransEModel
-from models.baselines.RNN_model import RNN
 from models.baselines.STAN_model import STAN
 import utils.sampler as sampler
 

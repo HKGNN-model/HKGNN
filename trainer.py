@@ -184,9 +184,10 @@ class Trainer_HKG(Trainer):
                     print('-' * 10 + 'Start evaluating at epoch: {}'.format(epoch) + '-' * 10)
                     self.model.eval()
                     self.evaluation(self.valid_dataloader_all, self.valid_dataloader_least, epoch, run)
-                    self.evaluation(self.test_dataloader_all, self.test_dataloader_least, epoch, run,
-                                    mode='test')
+
             print('-' * 10 + 'Start testing on test dataset'+ '-' * 10)
+            self.evaluation(self.test_dataloader_all, self.test_dataloader_least, self.args.gat_epochs, run,
+                            mode='test')
             self.save_model(self.args.gat_epochs)
 
 
@@ -308,7 +309,11 @@ class Trainer_Flashback(Trainer):
                     print('-' * 10 + 'Start evaluating at epoch: {}'.format(epoch) + '-' * 10)
                     self.model.eval()
                     self.evaluation(self.valid_dataloader_all, self.valid_dataloader_least, epoch, run)
-                    self.evaluation(self.test_dataloader_all, self.test_dataloader_least, epoch, run, mode='test')
+
+            print('-' * 10 + 'Start testing on test dataset'+ '-' * 10)
+            self.evaluation(self.test_dataloader_all, self.test_dataloader_least, self.args.fb_epochs, run,
+                            mode='test')
+            self.save_model(run)
 
     def train_one_epoch(self, epoch, run):
         args = self.args
@@ -398,7 +403,7 @@ class Trainer_Graph_Flashback(Trainer):
             args.transition_graph = flashback_graph.construct_poi_poi_graph(args, loc_encoder, temporal_preference)
             args.friend_graph = flashback_graph.construct_friend_graph(args, user_encoder, friend_preference)
             self.model = utils.get_model(args).to(device=self.device)
-            self.optimizer = optim.Adam(self.model.parameters(), lr=args.fb_lr, weight_decay=args.fb_weight_decay)
+            self.optimizer = optim.Adam(self.model.parameters(), lr=args.gfb_lr, weight_decay=args.gfb_weight_decay)
 
             for epoch in range(self.args.fb_epochs):
                 print('-' * 10 +'Training epoch: {}'.format(epoch) + '-' * 10)
@@ -411,16 +416,19 @@ class Trainer_Graph_Flashback(Trainer):
                     print('-' * 10 + 'Start evaluating at epoch: {}'.format(epoch) + '-' * 10)
                     self.model.eval()
                     self.evaluation(self.valid_dataloader_all, self.valid_dataloader_least, epoch, run)
-                    self.evaluation(self.test_dataloader_all, self.test_dataloader_least, epoch, run, mode='test')
+            print('-' * 10 + 'Start testing on test dataset' + '-' * 10)
+            self.evaluation(self.test_dataloader_all, self.test_dataloader_least, self.args.gfb_epochs, run,
+                            mode='test')
+            self.save_model(run)
 
     def train_kg(self, run):
-        optimizer = optim.Adam(self.kg_model.parameters(), lr=self.args.kg_lr, weight_decay=self.args.kg_weight_decay)
+        optimizer = optim.Adam(self.kg_model.parameters(), lr=self.args.gfb_kg_lr)
         criteria = lambda pos, neg: torch.sum(torch.max(pos - neg + self.args.gfb_margin, torch.zeros_like(pos)))
         all_triplets = set()
         for h, r, t in self.kg_train_data:
             all_triplets.add((h, r, t))
         
-        for epoch in range(self.args.kg_epochs):
+        for epoch in range(self.args.gfb_kg_epochs):
             for iteration, (h, r, t) in enumerate(self.train_kg_dataloader):
                 h = h.squeeze().to(self.device)
                 r = r.squeeze().to(self.device)
@@ -516,7 +524,10 @@ class Trainer_Stan(Trainer):
                     print('-' * 10 + 'Start evaluating at epoch: {}'.format(epoch) + '-' * 10)
                     self.model.eval()
                     self.evaluation(self.valid_dataloader_all, self.valid_dataloader_least, epoch, run)
-                    self.evaluation(self.test_dataloader_all, self.test_dataloader_least, epoch, run, mode='test')
+            print('-' * 10 + 'Start testing on test dataset' + '-' * 10)
+            self.evaluation(self.test_dataloader_all, self.test_dataloader_least, self.args.stan_epochs, run,
+                            mode='test')
+            self.save_model(run)
 
     def train_one_epoch(self, epoch, run):
         args = self.args

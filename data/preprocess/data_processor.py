@@ -337,7 +337,7 @@ def process_city_data(city, check_in, poi_data, users, venues, friend):
 
     check_in['time'] = check_in_time
     check_in['local_time'] = check_in_local_time
-    check_in.sort_values('local_time', ascending=True, inplace=True)
+    check_in.sort_values('time', ascending=True, inplace=True)
 
     check_in = check_in.drop(columns=['userid', 'Venue_id', 'utc_time', 'Timezone_offset', 'local_time'])
     return check_in, friend_list_index, user_index, poi_index
@@ -863,6 +863,7 @@ def process_data_Graph_Flashback(args):
     check_in['lon'] = lon
     poi_data = np.array(check_in.groupby('venues_index').agg({'lat_lon': 'first'}).reset_index()).T
     check_in.drop(['lat', 'lon'], axis=1, inplace=True)
+    check_in.sorted(by=['user_index', 'time'], inplace=True)
 
     poi_data = poi_data[1]
     return check_in, user_index, poi_index, poi_data, friend_list

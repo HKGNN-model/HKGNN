@@ -15,7 +15,7 @@ import utils.flashback_graph as flashback_graph
 
 
 def train_hkgat(args):
-    reload = True
+    reload = False
     # load the data
     try:
         if reload:

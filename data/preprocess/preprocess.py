@@ -224,40 +224,7 @@ class Dataset_Stan(Dataset):
 
     def __len__(self):
         return len(self.trajectories)
-    
-class Dataset_Deepmove(Dataset):
-    def __init__(self, trajectories, length, targets, history, args):
-        self.args = args
-        self.trajectories = torch.tensor(trajectories)
-        self.length = length
-        self.targets = targets
-        self.history = history
-        self.loc = []
-        self.time = []
-        self.loc_history = []
-        self.time_history = []
-        for i in range(len(self.trajectories)):
-            self.loc.append(self.trajectories[i][:, 1])
-            self.time.append(self.trajectories[i][:, 3])
-            self.loc_history.append(self.history[i][:, 1])
-            self.time_history.append(self.history[i][:, 3])
-            
-        self.loc = torch.tensor(self.loc)
-        self.time = torch.tensor(self.time)
-        self.loc_history = torch.tensor(self.loc_history)
-        self.time_history = torch.tensor(self.time_history)
 
-        self.loc -= args.index['poi']['start']
-        self.loc[self.loc < 0] = 0 
-        self.loc_history -= args.index['poi']['start']
-        self.loc_history[self.loc_history < 0] = 0
-        self.targets = self.targets[:, 1].astype(float) - args.index['poi']['start']
-
-    def __getitem__(self, item):
-        return self.loc[item], self.time[item], self.loc_history[item], self.time_history[item], self.length[item], self.targets[item]
-    
-    def __len__(self):
-        return len(self.trajectories)
 
 def get_dataset(check_in, seq_len=100):
     train_trajectories, train_length, targets_train, val_trajectories, val_length, \
@@ -279,38 +246,12 @@ def get_dataset(check_in, seq_len=100):
     val_length_least = np.array([val_length[i] for i in range(len(val_trajectories)) if int(targets_val[i][1]) in check_in_least])
     targets_val_least = np.array([targets_val[i] for i in range(len(val_trajectories)) if int(targets_val[i][1]) in check_in_least])
 
-    print('The number of samples in the least popular pois: ', len(test_trajectories_least))
-    print('The number of samples in the least alll pois: ', len(test_trajectories))
 
     return train_trajectories, train_length, targets_train, val_trajectories, val_length, \
                                 targets_val, test_trajectories, test_length, targets_test, \
                                 test_trajectories_least, test_length_least, targets_test_least, \
                                 val_trajectories_least, val_length_least, targets_val_least
 
-def get_dataset_deepmove(check_in, seq_len=100):
-    train_trajectories, train_length, targets_train, val_trajectories, val_length, \
-                                targets_val, test_trajectories, test_length, targets_test \
-                                                        = sampler.extract_trajectories_deepmove(check_in, seq_len)
-
-
-    check_in_count = collections.Counter(list(targets_train[:, 1]))
-    # find 10% least popular pois
-
-    check_in_count = sorted(check_in_count.items(), key=lambda x: x[1])
-    check_in_count = check_in_count[:int(len(check_in_count) * 0.3)]
-    check_in_least = set([v[0] for v in check_in_count])
-    test_trajectories_least = np.array([test_trajectories[i] for i in range(len(test_trajectories)) if int(targets_test[i][1]) in check_in_least])
-    test_length_least = np.array([test_length[i] for i in range(len(test_trajectories)) if int(targets_test[i][1]) in check_in_least])
-    targets_test_least = np.array([targets_test[i] for i in range(len(test_trajectories)) if int(targets_test[i][1]) in check_in_least])
-
-    val_trajectories_least = np.array([val_trajectories[i] for i in range(len(val_trajectories)) if int(targets_val[i][1]) in check_in_least])
-    val_length_least = np.array([val_length[i] for i in range(len(val_trajectories)) if int(targets_val[i][1]) in check_in_least])
-    targets_val_least = np.array([targets_val[i] for i in range(len(val_trajectories)) if int(targets_val[i][1]) in check_in_least])
-
-    return train_trajectories, train_length, targets_train, val_trajectories, val_length, \
-                                targets_val, test_trajectories, test_length, targets_test, \
-                                test_trajectories_least, test_length_least, targets_test_least, \
-                                val_trajectories_least, val_length_least, targets_val_least
 
 def preprocess_data_HKG(args, all_relations, train_data, poi_index):
     #######################################
